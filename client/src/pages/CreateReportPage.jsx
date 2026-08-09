@@ -283,19 +283,32 @@ export default function CreateReportPage() {
     setStep(2);
 
     try {
+      // Ensure coordinates are real numbers (defensive cast)
+      const lng = parseFloat(coordinates[0]);
+      const lat = parseFloat(coordinates[1]);
+      if (isNaN(lng) || isNaN(lat)) {
+        setSubmitError("Invalid coordinates. Please select a location on the map.");
+        setIsSubmitting(false);
+        setStep(1);
+        return;
+      }
+
       // 1. Create the report document
       const reportPayload = {
         category,
         title: title.trim(),
         description: description.trim(),
         location: {
-          coordinates, // [lng, lat] — matches backend schema
+          coordinates: [lng, lat], // guaranteed numbers
           displayAddress: displayAddress.trim() || undefined,
         },
       };
 
+      console.log("📤 Submitting report payload:", JSON.stringify(reportPayload, null, 2));
+
       const created = await createReport(reportPayload);
-      const reportId = created.report?._id || created._id;
+      // sanitizeReport on the backend converts _id → id, so check both
+      const reportId = created.report?.id || created.report?._id || created.id || created._id;
 
       if (!reportId) {
         throw new Error("Server did not return a report ID.");

@@ -11,6 +11,7 @@ function sanitizeReport(report) {
 
   return {
     id: String(source._id || source.id),
+    _id: String(source._id || source.id), // alias — frontend uses both
     reporterId: String(source.reporterId),
     category: source.category,
     title: source.title,

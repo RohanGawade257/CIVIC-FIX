@@ -17,9 +17,12 @@ export async function apiRequest(path, options = {}) {
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
+    // Log full server error for debugging
+    console.error(`❌ API ${options.method || "GET"} ${path} failed [${response.status}]:`, payload);
     const error = new Error(payload?.message || "Request failed.");
     error.statusCode = response.status;
     error.code = payload?.code || "REQUEST_FAILED";
+    error.details = payload?.details;
     throw error;
   }
 
