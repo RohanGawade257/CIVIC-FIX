@@ -328,15 +328,9 @@ Actual images should be stored in object storage.
 
 # 10. Image Storage
 
-Use an object-storage service such as:
+Used an object-storage service:
 
-- Cloudinary
-- Amazon S3
-- Cloudflare R2
-- Supabase Storage
-- Another S3-compatible provider
-
-The final provider can be selected based on project budget, free-tier availability, deployment environment, and team familiarity.
+- Cloudinary  (this is been used)
 
 ### Storage architecture
 

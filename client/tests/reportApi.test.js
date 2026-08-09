@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
-import { createReport, getMyReports, getReport } from "../src/services/reportApi.js";
+import { createReport, getMyReports, getReport, uploadReportImage } from "../src/services/reportApi.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -70,4 +70,20 @@ test("getMyReports and getReport call expected report endpoints", async () => {
     ],
   );
   assert.equal(calls.every((call) => call.options.credentials === "include"), true);
+});
+
+test("uploadReportImage posts multipart form data with credentials enabled", async () => {
+  mockFetch((url, options) => {
+    assert.equal(url, "http://localhost:4000/api/v1/reports/report-1/images");
+    assert.equal(options.method, "POST");
+    assert.equal(options.credentials, "include");
+    assert.ok(options.body instanceof FormData);
+    assert.equal(options.headers, undefined);
+
+    return jsonResponse({ success: true, report: { id: "report-1" } });
+  });
+
+  const response = await uploadReportImage("report-1", new Blob(["image"], { type: "image/webp" }));
+
+  assert.equal(response.report.id, "report-1");
 });

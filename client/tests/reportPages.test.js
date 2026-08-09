@@ -18,7 +18,12 @@ test("report pages use protected auth context and report API calls", () => {
 
   assert.match(createPage, /useAuth/);
   assert.match(createPage, /createReport/);
+  assert.match(createPage, /uploadReportImage/);
+  assert.match(createPage, /createEditedImageFile/);
   assert.match(createPage, /Issue location/);
+  assert.match(createPage, /Issue image/);
+  assert.match(createPage, /Crop X/);
+  assert.match(createPage, /Rotate/);
   assert.match(myReportsPage, /getMyReports/);
   assert.match(detailPage, /getReport/);
   assert.match(detailPage, /Timeline/);

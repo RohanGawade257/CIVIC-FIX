@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext.jsx";
+import { DEFAULT_EDIT_STATE, createEditedImageFile } from "../features/reports/imageEditing.js";
 import { REPORT_CATEGORY_OPTIONS } from "../features/reports/reportCategories.js";
-import { createReport } from "../services/reportApi.js";
+import { createReport, uploadReportImage } from "../services/reportApi.js";
 
 function buildReportPayload(values) {
   return {
@@ -20,6 +21,8 @@ function CreateReportPage() {
   const navigate = useNavigate();
   const { status, user } = useAuth();
   const [error, setError] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imageEdit, setImageEdit] = useState(DEFAULT_EDIT_STATE);
   const [values, setValues] = useState({
     category: "ROADS",
     title: "",
@@ -48,12 +51,31 @@ function CreateReportPage() {
     }));
   }
 
+  function handleImageChange(event) {
+    const file = event.target.files?.[0] || null;
+
+    setImageFile(file);
+  }
+
+  function handleImageEditChange(event) {
+    const { name, value } = event.target;
+
+    setImageEdit((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
 
     try {
       const response = await createReport(buildReportPayload(values));
+      if (imageFile) {
+        const editedImage = await createEditedImageFile(imageFile, imageEdit);
+        await uploadReportImage(response.report.id, editedImage);
+      }
       navigate(`/reports/${response.report.id}`);
     } catch (requestError) {
       setError(requestError.message);
@@ -106,6 +128,50 @@ function CreateReportPage() {
               onChange={handleChange}
               type="text"
               value={values.displayAddress}
+            />
+          </p>
+        </fieldset>
+        <fieldset>
+          <legend>Issue image</legend>
+          <p>
+            <label htmlFor="image">Image</label>
+            <input accept="image/jpeg,image/png,image/webp" id="image" name="image" onChange={handleImageChange} type="file" />
+          </p>
+          <p>
+            <label htmlFor="cropX">Crop X</label>
+            <input id="cropX" max="100" min="0" name="cropX" onChange={handleImageEditChange} type="range" value={imageEdit.cropX} />
+          </p>
+          <p>
+            <label htmlFor="cropY">Crop Y</label>
+            <input id="cropY" max="100" min="0" name="cropY" onChange={handleImageEditChange} type="range" value={imageEdit.cropY} />
+          </p>
+          <p>
+            <label htmlFor="cropSize">Crop size</label>
+            <input
+              id="cropSize"
+              max="100"
+              min="20"
+              name="cropSize"
+              onChange={handleImageEditChange}
+              type="range"
+              value={imageEdit.cropSize}
+            />
+          </p>
+          <p>
+            <label htmlFor="zoom">Zoom</label>
+            <input id="zoom" max="3" min="1" name="zoom" onChange={handleImageEditChange} step="0.1" type="range" value={imageEdit.zoom} />
+          </p>
+          <p>
+            <label htmlFor="rotation">Rotate</label>
+            <input
+              id="rotation"
+              max="180"
+              min="-180"
+              name="rotation"
+              onChange={handleImageEditChange}
+              step="5"
+              type="range"
+              value={imageEdit.rotation}
             />
           </p>
         </fieldset>
