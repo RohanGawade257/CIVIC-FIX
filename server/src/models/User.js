@@ -12,9 +12,15 @@ const pointSchema = new mongoose.Schema(
       type: [Number],
       validate: {
         validator(value) {
-          return value.length === 2;
+          return (
+            value.length === 2
+            && value[0] >= -180
+            && value[0] <= 180
+            && value[1] >= -90
+            && value[1] <= 90
+          );
         },
-        message: "Preferred location coordinates must contain longitude and latitude.",
+        message: "Preferred location coordinates must contain valid longitude and latitude.",
       },
     },
   },

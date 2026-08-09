@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const { env } = require("./config/env");
 const authRoutes = require("./routes/authRoutes");
 const healthRoutes = require("./routes/healthRoutes");
+const userRoutes = require("./routes/userRoutes");
 const { notFoundHandler, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 app.use(cookieParser());
 
 app.use("/api/v1", authRoutes);
+app.use("/api/v1", userRoutes);
 app.use("/api/v1", healthRoutes);
 
 app.use(notFoundHandler);
