@@ -1,0 +1,25 @@
+{
+  "name": "civicfix-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CivicFix AI civic issue reporting platform.",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "test": "node scripts/run-workspace-script.js test",
+    "build": "node scripts/run-workspace-script.js build",
+    "dev": "node scripts/run-workspace-script.js dev"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.9.0"
+  }
+}
