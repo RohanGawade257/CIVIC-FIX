@@ -136,3 +136,5 @@ export function ImageEditor({ file, editState, onEditChange, onFileChange }) {
     </fieldset>
   );
 }
+
+export default ImageEditor;

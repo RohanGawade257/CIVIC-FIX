@@ -78,6 +78,8 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       error,
+      isAuthenticated: status === "authenticated",
+      isLoading: status === "loading",
       login,
       logout,
       refreshUser,

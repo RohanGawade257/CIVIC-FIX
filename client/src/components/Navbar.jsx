@@ -6,21 +6,20 @@ import { Button } from "./ui/Button.jsx";
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -28,12 +27,14 @@ export function Navbar() {
   };
 
   const navLinks = [
+    { label: "Home", path: "/" },
     { label: "CivicFeed", path: "/feed" },
     ...(isAuthenticated ? [{ label: "My Reports", path: "/reports/my" }] : []),
-    ...(user?.role === "ADMIN" ? [{ label: "Admin Portal", path: "/admin" }] : []),
+    ...(user?.role === "ADMIN" ? [{ label: "⚙ Admin Portal", path: "/admin" }] : []),
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) =>
+    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 pt-3 pb-2">
@@ -76,7 +77,9 @@ export function Navbar() {
 
           {/* Action CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
+            ) : isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <Link
                   to="/reports/new"
@@ -89,15 +92,21 @@ export function Navbar() {
                 </Link>
 
                 <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+                  {/* User profile chip */}
                   <Link
                     to="/profile"
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100/80 transition-colors"
+                    title="My Profile & Preferences"
                   >
                     <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
                       {user?.name?.[0]?.toUpperCase() || "U"}
                     </div>
                     <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">{user?.name}</span>
+                    {user?.role === "ADMIN" && (
+                      <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">ADMIN</span>
+                    )}
                   </Link>
+                  {/* Sign out */}
                   <button
                     onClick={handleLogout}
                     title="Sign Out"
@@ -126,7 +135,7 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Hamburger Toggle */}
+          {/* Mobile Hamburger */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 text-gray-700 hover:text-blue-600 rounded-xl focus:outline-none"
@@ -142,7 +151,7 @@ export function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Dropdown Glass Menu */}
+        {/* Mobile Dropdown Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-3 pt-3 border-t border-gray-200/60 flex flex-col gap-2 pb-2 animate-fadeIn">
             {navLinks.map((link) => (
@@ -157,9 +166,23 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+
             <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
               {isAuthenticated ? (
                 <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-medium"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
+                      {user?.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <span>{user?.name}</span>
+                    {user?.role === "ADMIN" && (
+                      <span className="ml-auto text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">ADMIN</span>
+                    )}
+                  </Link>
                   <Link
                     to="/reports/new"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -168,10 +191,7 @@ export function Navbar() {
                     + Report New Issue
                   </Link>
                   <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      handleLogout();
-                    }}
+                    onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }}
                     className="w-full py-2 text-center text-red-600 font-medium hover:bg-red-50 rounded-xl"
                   >
                     Sign Out

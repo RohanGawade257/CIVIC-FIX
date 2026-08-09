@@ -18,10 +18,16 @@ async function registerUser(input, dependencies = {}) {
   }
 
   const passwordHash = await hashPassword(data.password);
+
+  // Allow admin role if correct secret code is provided
+  const adminSecret = process.env.ADMIN_SECRET_CODE;
+  const role = adminSecret && input.adminCode && input.adminCode === adminSecret ? "ADMIN" : "USER";
+
   const user = await userModel.create({
     name: data.name,
     email: data.email,
     passwordHash,
+    role,
   });
 
   return sanitizeUser(user);
