@@ -1,4 +1,8 @@
-export const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
+let _baseUrl = import.meta.env?.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
+if (_baseUrl && !_baseUrl.endsWith("/api/v1")) {
+  _baseUrl = `${_baseUrl.replace(/\/$/, "")}/api/v1`;
+}
+export const API_BASE_URL = _baseUrl;
 
 function buildRequestBody(body) {
   return body === undefined ? undefined : JSON.stringify(body);
