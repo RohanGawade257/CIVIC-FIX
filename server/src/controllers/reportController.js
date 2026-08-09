@@ -3,6 +3,7 @@ const {
   getReportByIdForUser,
   listReportsForUser,
 } = require("../services/report/reportService");
+const { attachImageToReport } = require("../services/image/reportImageService");
 
 async function createReportController(req, res) {
   const report = await createReport(req.auth.userId, req.body);
@@ -31,8 +32,18 @@ async function listMyReportsController(req, res) {
   });
 }
 
+async function uploadReportImageController(req, res) {
+  const report = await attachImageToReport(req.params.reportId, req.user, req.file);
+
+  res.status(200).json({
+    success: true,
+    report,
+  });
+}
+
 module.exports = {
   createReportController,
   getReportController,
   listMyReportsController,
+  uploadReportImageController,
 };

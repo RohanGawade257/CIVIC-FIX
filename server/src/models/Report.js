@@ -89,6 +89,20 @@ const imageMetadataSchema = new mongoose.Schema(
       enum: ["PENDING", "PROCESSED", "FAILED"],
       default: "PENDING",
     },
+    originalMimeType: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    originalSizeBytes: {
+      type: Number,
+      min: 0,
+    },
+    thumbnailStorageKey: {
+      type: String,
+      trim: true,
+      maxlength: 512,
+    },
   },
   { _id: false },
 );

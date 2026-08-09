@@ -6,4 +6,5 @@ test("reportController exposes createReportController", () => {
   assert.equal(typeof reportController.createReportController, "function");
   assert.equal(typeof reportController.getReportController, "function");
   assert.equal(typeof reportController.listMyReportsController, "function");
+  assert.equal(typeof reportController.uploadReportImageController, "function");
 });

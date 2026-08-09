@@ -12,7 +12,7 @@ function getEnv(source = process.env) {
     mongoDbUri: source.MONGODB_URI || "",
     authSecret: source.AUTH_SECRET || "",
     aiApiKey: source.AI_API_KEY || "",
-    storageProvider: source.STORAGE_PROVIDER || "unselected",
+    storageProvider: (source.STORAGE_PROVIDER || "unselected").toLowerCase(),
     storageBucket: source.STORAGE_BUCKET || "",
     storageAccessKey: source.STORAGE_ACCESS_KEY || "",
     storageSecretKey: source.STORAGE_SECRET_KEY || "",

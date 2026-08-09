@@ -17,6 +17,7 @@ test("Report model stores image metadata only", () => {
   assert.equal(imageSchemaPaths.originalUrl.instance, "String");
   assert.equal(imageSchemaPaths.thumbnailUrl.instance, "String");
   assert.equal(imageSchemaPaths.storageKey.instance, "String");
+  assert.equal(imageSchemaPaths.thumbnailStorageKey.instance, "String");
   assert.equal(imageSchemaPaths.data, undefined);
   assert.equal(imageSchemaPaths.buffer, undefined);
   assert.equal(imageSchemaPaths.binary, undefined);
