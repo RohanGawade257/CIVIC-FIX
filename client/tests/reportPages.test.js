@@ -13,6 +13,7 @@ test("report routes are wired into the client router", () => {
 
 test("report pages use protected auth context and report API calls", () => {
   const createPage = readFileSync(join(process.cwd(), "src", "pages", "CreateReportPage.jsx"), "utf8");
+  const imageEditor = readFileSync(join(process.cwd(), "src", "features", "reports", "ImageEditor.jsx"), "utf8");
   const myReportsPage = readFileSync(join(process.cwd(), "src", "pages", "MyReportsPage.jsx"), "utf8");
   const detailPage = readFileSync(join(process.cwd(), "src", "pages", "ReportDetailPage.jsx"), "utf8");
 
@@ -21,9 +22,10 @@ test("report pages use protected auth context and report API calls", () => {
   assert.match(createPage, /uploadReportImage/);
   assert.match(createPage, /createEditedImageFile/);
   assert.match(createPage, /Issue location/);
-  assert.match(createPage, /Issue image/);
-  assert.match(createPage, /Crop X/);
-  assert.match(createPage, /Rotate/);
+  assert.match(createPage, /ImageEditor/);
+  assert.match(imageEditor, /Issue image/);
+  assert.match(imageEditor, /Crop X/);
+  assert.match(imageEditor, /Rotate/);
   assert.match(myReportsPage, /getMyReports/);
   assert.match(detailPage, /getReport/);
   assert.match(detailPage, /Timeline/);

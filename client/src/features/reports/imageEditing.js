@@ -72,30 +72,43 @@ function canvasToBlob(canvas, quality) {
   });
 }
 
-export async function createEditedImageFile(file, editInput = {}) {
+export function drawEditedImage(image, editInput, canvas) {
   const edit = normalizeImageEdit(editInput);
-  const image = await loadImage(file);
-  const crop = calculateCropRect(image.naturalWidth, image.naturalHeight, edit);
+  const width = image.naturalWidth || image.width || 800;
+  const height = image.naturalHeight || image.height || 600;
+  const crop = calculateCropRect(width, height, edit);
   const outputSize = Math.min(1600, Math.max(crop.width, crop.height));
-  const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
 
   canvas.width = outputSize;
   canvas.height = outputSize;
+  if (context) {
+    context.clearRect(0, 0, outputSize, outputSize);
+    context.save();
+    context.translate(outputSize / 2, outputSize / 2);
+    context.rotate((edit.rotation * Math.PI) / 180);
+    context.drawImage(
+      image,
+      crop.x,
+      crop.y,
+      crop.width,
+      crop.height,
+      -outputSize / 2,
+      -outputSize / 2,
+      outputSize,
+      outputSize,
+    );
+    context.restore();
+  }
 
-  context.translate(outputSize / 2, outputSize / 2);
-  context.rotate((edit.rotation * Math.PI) / 180);
-  context.drawImage(
-    image,
-    crop.x,
-    crop.y,
-    crop.width,
-    crop.height,
-    -outputSize / 2,
-    -outputSize / 2,
-    outputSize,
-    outputSize,
-  );
+  return { edit, crop, outputSize };
+}
+
+export async function createEditedImageFile(file, editInput = {}) {
+  const edit = normalizeImageEdit(editInput);
+  const image = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  drawEditedImage(image, edit, canvas);
 
   const blob = await canvasToBlob(canvas, edit.quality);
 
@@ -104,4 +117,5 @@ export async function createEditedImageFile(file, editInput = {}) {
   });
 }
 
-export { DEFAULT_EDIT_STATE };
+export { DEFAULT_EDIT_STATE, loadImage };
+
