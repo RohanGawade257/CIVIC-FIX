@@ -7,11 +7,13 @@ import NotFoundPage from "../pages/NotFoundPage.jsx";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import ReportDetailPage from "../pages/ReportDetailPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
+import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/admin" element={<AdminDashboardPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/register" element={<RegisterPage />} />
