@@ -11,15 +11,21 @@ import { getPublicFeed, getCivicFeed } from "../services/feedApi.js";
 import { useAuth } from "../features/auth/AuthContext.jsx";
 
 export default function CivicFeedPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [reports, setReports] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userCoords, setUserCoords] = useState(null);
   const [locationStatus, setLocationStatus] = useState("detecting"); // detecting | granted | denied
 
-  // Step 1: Detect user geolocation
+  // Step 1: Detect user geolocation or fallback to preferredLocation
   useEffect(() => {
+    // If user has a saved preferredLocation, set it immediately as default
+    if (user?.preferredLocation?.point?.coordinates?.length === 2) {
+      const [pLng, pLat] = user.preferredLocation.point.coordinates;
+      setUserCoords({ longitude: pLng, latitude: pLat });
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -27,17 +33,27 @@ export default function CivicFeedPage() {
           setLocationStatus("granted");
         },
         () => {
-          // Default to Pune if denied
-          setUserCoords({ longitude: 73.8567, latitude: 18.5204 });
+          // Fallback to user preferredLocation or Pune
+          if (user?.preferredLocation?.point?.coordinates?.length === 2) {
+            const [pLng, pLat] = user.preferredLocation.point.coordinates;
+            setUserCoords({ longitude: pLng, latitude: pLat });
+          } else {
+            setUserCoords({ longitude: 73.8567, latitude: 18.5204 });
+          }
           setLocationStatus("denied");
         },
         { timeout: 5000 }
       );
     } else {
-      setUserCoords({ longitude: 73.8567, latitude: 18.5204 });
+      if (user?.preferredLocation?.point?.coordinates?.length === 2) {
+        const [pLng, pLat] = user.preferredLocation.point.coordinates;
+        setUserCoords({ longitude: pLng, latitude: pLat });
+      } else {
+        setUserCoords({ longitude: 73.8567, latitude: 18.5204 });
+      }
       setLocationStatus("denied");
     }
-  }, []);
+  }, [user]);
 
   // Step 2: Load feed once we have coords
   useEffect(() => {

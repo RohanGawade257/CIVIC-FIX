@@ -42,6 +42,7 @@ test("getAuthCookieOptions uses httpOnly and production secure cookies", () => {
   assert.equal(devOptions.httpOnly, true);
   assert.equal(devOptions.sameSite, "lax");
   assert.equal(devOptions.secure, false);
+  assert.equal(prodOptions.sameSite, "none");
   assert.equal(prodOptions.secure, true);
 });
 
@@ -59,7 +60,7 @@ test("clearAuthCookie clears the auth cookie with matching security options", ()
 
   assert.equal(clearedName, AUTH_COOKIE_NAME);
   assert.equal(clearedOptions.httpOnly, true);
-  assert.equal(clearedOptions.sameSite, "lax");
+  assert.equal(clearedOptions.sameSite, "none");
   assert.equal(clearedOptions.secure, true);
   assert.equal(clearedOptions.maxAge, undefined);
 });

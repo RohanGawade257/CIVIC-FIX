@@ -14,12 +14,59 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [locationAddress, setLocationAddress] = useState("");
+  const [locationCoordinates, setLocationCoordinates] = useState(null);
   const [adminCode, setAdminCode] = useState("");
   const [showAdminField, setShowAdminField] = useState(isAdminFlow);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register, isAuthenticated, user, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Location search state & debounced Nominatim search
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSearchingLoc, setIsSearchingLoc] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = React.useRef(null);
+
+  const handleLocationInputChange = (val) => {
+    setLocationAddress(val);
+    setLocationCoordinates(null);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (val.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setIsSearchingLoc(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5&addressdetails=1`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        const data = await res.json();
+        setSuggestions(data || []);
+        setShowSuggestions(true);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearchingLoc(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectLocation = (place) => {
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
+    setLocationCoordinates([lon, lat]);
+    setLocationAddress(place.display_name);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
 
   // Redirect if already logged in
   useEffect(() => {
@@ -41,6 +88,12 @@ export default function RegisterPage() {
 
     try {
       const payload = { name, email, password };
+      if (locationCoordinates && locationCoordinates.length === 2) {
+        payload.preferredLocation = {
+          locality: locationAddress,
+          coordinates: locationCoordinates,
+        };
+      }
       if (showAdminField && adminCode) payload.adminCode = adminCode;
 
       const newUser = await register(payload);
@@ -112,6 +165,63 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+
+            {/* Location Autocomplete Field */}
+            <div className="relative">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Your Neighborhood / Area Location
+                {isSearchingLoc && (
+                  <span className="ml-2 text-xs text-blue-500 font-normal">Searching…</span>
+                )}
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={locationAddress}
+                  onChange={(e) => handleLocationInputChange(e.target.value)}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="Type your area or city (e.g. Goa, Panaji, FC Road Pune)"
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-white/70 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all"
+                />
+                {isSearchingLoc && (
+                  <div className="absolute right-3 top-3.5">
+                    <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin block" />
+                  </div>
+                )}
+              </div>
+
+              {showSuggestions && suggestions.length > 0 && (
+                <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
+                  {suggestions.map((place) => (
+                    <li
+                      key={place.place_id}
+                      onMouseDown={() => handleSelectLocation(place)}
+                      className="flex items-start gap-2.5 px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors"
+                    >
+                      <svg className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-900 font-medium leading-snug truncate">
+                          {place.name || place.display_name.split(",")[0]}
+                        </p>
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">{place.display_name}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {locationCoordinates && (
+                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>Geocoded: [{locationCoordinates[1].toFixed(4)}°, {locationCoordinates[0].toFixed(4)}°]</span>
+                </div>
+              )}
+            </div>
 
             {showAdminField && (
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 space-y-3 animate-fadeIn">

@@ -23,11 +23,23 @@ async function registerUser(input, dependencies = {}) {
   const adminSecret = process.env.ADMIN_SECRET_CODE;
   const role = adminSecret && input.adminCode && input.adminCode === adminSecret ? "ADMIN" : "USER";
 
+  let preferredLocation = null;
+  if (data.preferredLocation) {
+    preferredLocation = {
+      locality: data.preferredLocation.locality || "",
+      point: {
+        type: "Point",
+        coordinates: data.preferredLocation.coordinates,
+      },
+    };
+  }
+
   const user = await userModel.create({
     name: data.name,
     email: data.email,
     passwordHash,
     role,
+    preferredLocation,
   });
 
   return sanitizeUser(user);

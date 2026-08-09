@@ -69,12 +69,29 @@ export function CivicMap({
       tap: true,
     });
 
-    // Real OpenStreetMap tile layer
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    // Real OpenStreetMap tile layer with automatic fallback if OSM returns 503/429
+    const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
+      subdomains: ["a", "b", "c"],
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
-    }).addTo(map);
+    });
+
+    let fallbackTriggered = false;
+    tileLayer.on("tileerror", () => {
+      if (!fallbackTriggered) {
+        fallbackTriggered = true;
+        map.removeLayer(tileLayer);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+          maxZoom: 19,
+          subdomains: ["a", "b", "c", "d"],
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }).addTo(map);
+      }
+    });
+
+    tileLayer.addTo(map);
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
 

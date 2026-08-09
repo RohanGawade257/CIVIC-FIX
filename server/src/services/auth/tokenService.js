@@ -33,12 +33,13 @@ function verifyAuthToken(token, secret = env.authSecret) {
 }
 
 function getAuthCookieOptions(config = env) {
+  const isProd = config.nodeEnv === "production";
   return {
     httpOnly: true,
     maxAge: AUTH_TOKEN_TTL_SECONDS * 1000,
     path: "/",
-    sameSite: "lax",
-    secure: config.nodeEnv === "production",
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
   };
 }
 
