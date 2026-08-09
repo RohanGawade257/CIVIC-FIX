@@ -1,4 +1,4 @@
-import { apiRequest } from "./apiClient.js";
+import { apiRequest, API_BASE_URL } from "./apiClient.js";
 
 export function createReport(payload) {
   return apiRequest("/reports", {
@@ -17,10 +17,9 @@ export function getReport(reportId) {
 
 export async function uploadReportImage(reportId, imageFile) {
   const formData = new FormData();
-
   formData.append("image", imageFile);
 
-  const response = await fetch(`http://localhost:4000/api/v1/reports/${reportId}/images`, {
+  const response = await fetch(`${API_BASE_URL}/reports/${reportId}/images`, {
     method: "POST",
     credentials: "include",
     body: formData,
