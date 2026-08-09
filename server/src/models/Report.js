@@ -198,6 +198,10 @@ const reportSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       default: null,
     },
+    resolutionEvidence: {
+      type: imageMetadataSchema,
+      default: null,
+    },
     citizenConfirmation: {
       type: mongoose.Schema.Types.Mixed,
       default: null,

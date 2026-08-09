@@ -9,6 +9,7 @@ const reportRoutes = require("./routes/reportRoutes");
 const userRoutes = require("./routes/userRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const feedRoutes = require("./routes/feedRoutes");
 const { notFoundHandler, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/v1", userRoutes);
 app.use("/api/v1", reportRoutes);
 app.use("/api/v1", aiRoutes);
 app.use("/api/v1", adminRoutes);
+app.use("/api/v1", feedRoutes);
 app.use("/api/v1", healthRoutes);
 
 app.use(notFoundHandler);

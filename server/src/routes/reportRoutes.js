@@ -21,4 +21,12 @@ router.post(
   asyncHandler(reportController.analyzeReportController),
 );
 
+const trackingController = require("../controllers/trackingController");
+router.get("/notifications", authenticateUser, asyncHandler(trackingController.getNotificationsController));
+router.post(
+  "/reports/:reportId/confirm",
+  authenticateUser,
+  asyncHandler(trackingController.confirmResolutionController),
+);
+
 module.exports = router;
