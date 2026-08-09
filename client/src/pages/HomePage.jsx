@@ -9,6 +9,8 @@ function HomePage() {
         <Link to="/register">Create account</Link>
         <Link to="/login">Login</Link>
         <Link to="/profile">Profile</Link>
+        <Link to="/reports/new">Submit report</Link>
+        <Link to="/reports/my">My reports</Link>
       </nav>
     </main>
   );
