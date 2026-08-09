@@ -34,35 +34,53 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     setStatus("loading");
-    const response = await registerUser(payload);
-    setUser(response.user);
-    setStatus("authenticated");
-    setError("");
-    return response.user;
+    try {
+      const response = await registerUser(payload);
+      setUser(response.user);
+      setStatus("authenticated");
+      setError("");
+      return response.user;
+    } catch (err) {
+      setStatus("anonymous");
+      throw err;
+    }
   }, []);
 
   const login = useCallback(async (payload) => {
     setStatus("loading");
-    const response = await loginUser(payload);
-    setUser(response.user);
-    setStatus("authenticated");
-    setError("");
-    return response.user;
+    try {
+      const response = await loginUser(payload);
+      setUser(response.user);
+      setStatus("authenticated");
+      setError("");
+      return response.user;
+    } catch (err) {
+      setStatus("anonymous");
+      throw err;
+    }
   }, []);
 
   const logout = useCallback(async () => {
-    await logoutUser();
-    setUser(null);
-    setStatus("anonymous");
-    setError("");
+    try {
+      await logoutUser();
+    } finally {
+      setUser(null);
+      setStatus("anonymous");
+      setError("");
+    }
   }, []);
 
   const updateProfile = useCallback(async (payload) => {
-    const response = await updateCurrentUser(payload);
-    setUser(response.user);
-    setStatus("authenticated");
-    setError("");
-    return response.user;
+    try {
+      const response = await updateCurrentUser(payload);
+      setUser(response.user);
+      setStatus("authenticated");
+      setError("");
+      return response.user;
+    } catch (err) {
+      setStatus("authenticated"); // restore previous state
+      throw err;
+    }
   }, []);
 
   useEffect(() => {
