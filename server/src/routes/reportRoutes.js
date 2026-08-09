@@ -3,7 +3,7 @@ const reportController = require("../controllers/reportController");
 const { authenticateUser } = require("../middleware/authMiddleware");
 const { uploadImage } = require("../middleware/uploadMiddleware");
 const asyncHandler = require("../utils/asyncHandler");
-
+const { uploadLimiter } = require("../middleware/rateLimitMiddleware");
 const router = Router();
 
 router.post("/reports", authenticateUser, asyncHandler(reportController.createReportController));
@@ -12,6 +12,7 @@ router.get("/reports/:reportId", authenticateUser, asyncHandler(reportController
 router.post(
   "/reports/:reportId/images",
   authenticateUser,
+  uploadLimiter,
   uploadImage.single("image"),
   asyncHandler(reportController.uploadReportImageController),
 );
