@@ -1,6 +1,6 @@
 # CivicFix AI - Build Progress
 
-Last updated: 2026-08-09T11:34:52+05:30
+Last updated: 2026-08-09T11:37:00+05:30
 Current phase: Phase 2 - Report Core
 
 ## Phase 0 - Project Setup
@@ -27,12 +27,12 @@ Current phase: Phase 2 - Report Core
 - [x] Phase 1 security and definition-of-done check
 
 ## Phase 2 - Report Core
-- [ ] Report schema
+- [x] Report schema
 - [ ] Report creation
-- [ ] Category selection
-- [ ] Description
-- [ ] Location
-- [ ] Status
+- [x] Category selection
+- [x] Description
+- [x] Location
+- [x] Status
 - [ ] Report retrieval
 - [ ] My Reports
 
