@@ -25,8 +25,9 @@ export function AuthProvider({ children }) {
     } catch (requestError) {
       setUser(null);
       setStatus("anonymous");
-
-      if (requestError.code !== "AUTH_REQUIRED") {
+      if (requestError.code === "AUTH_REQUIRED") {
+        localStorage.removeItem("civicfix_token");
+      } else {
         setError(requestError.message);
       }
     }
@@ -36,6 +37,9 @@ export function AuthProvider({ children }) {
     setStatus("loading");
     try {
       const response = await registerUser(payload);
+      if (response.token) {
+        localStorage.setItem("civicfix_token", response.token);
+      }
       setUser(response.user);
       setStatus("authenticated");
       setError("");
@@ -50,6 +54,9 @@ export function AuthProvider({ children }) {
     setStatus("loading");
     try {
       const response = await loginUser(payload);
+      if (response.token) {
+        localStorage.setItem("civicfix_token", response.token);
+      }
       setUser(response.user);
       setStatus("authenticated");
       setError("");
@@ -64,6 +71,7 @@ export function AuthProvider({ children }) {
     try {
       await logoutUser();
     } finally {
+      localStorage.removeItem("civicfix_token");
       setUser(null);
       setStatus("anonymous");
       setError("");

@@ -19,7 +19,12 @@ function createAuthenticationMiddleware(dependencies = {}) {
 
   return async function authenticateUser(req, _res, next) {
     try {
-      const token = req.cookies?.[AUTH_COOKIE_NAME];
+      let token = req.cookies?.[AUTH_COOKIE_NAME];
+      const authHeader = req.headers?.authorization;
+
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7).trim();
+      }
 
       if (!token) {
         throw new ApiError(401, "Authentication required.", "AUTH_REQUIRED");

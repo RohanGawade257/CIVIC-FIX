@@ -9,13 +9,20 @@ function buildRequestBody(body) {
 }
 
 export async function apiRequest(path, options = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("civicfix_token") : null;
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  if (token && !headers.Authorization && !headers.authorization) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method || "GET",
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers,
     body: buildRequestBody(options.body),
   });
   const payload = await response.json().catch(() => null);
