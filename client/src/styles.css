@@ -1,1 +1,161 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Base Theme Colors */
+    --color-bg: #F7F9FC;
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #FFFFFF;
+    --color-primary: #2563EB;
+    --color-primary-strong: #1D4ED8;
+    --color-primary-soft: #DBEAFE;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-muted: #6B7280;
+    --color-border: #E5E7EB;
+
+    /* Semantic Colors */
+    --color-success: #16A34A;
+    --color-success-soft: #DCFCE7;
+    --color-warning: #F59E0B;
+    --color-warning-soft: #FEF3C7;
+    --color-danger: #DC2626;
+    --color-danger-soft: #FEE2E2;
+    --color-info: #0EA5E9;
+    --color-info-soft: #E0F2FE;
+
+    /* Civic Category Colors */
+    --cat-road: #EF4444;
+    --cat-streetlight: #F59E0B;
+    --cat-garbage: #22C55E;
+    --cat-water: #06B6D4;
+    --cat-traffic: #8B5CF6;
+    --cat-infra: #3B82F6;
+    --cat-other: #64748B;
+
+    /* Border Radii */
+    --radius-sm: 12px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 30px;
+    --radius-hero: 36px;
+    --radius-pill: 9999px;
+
+    /* Shadows */
+    --shadow-raised: 0 8px 30px rgba(15, 23, 42, 0.08);
+    --shadow-floating-glass: 0 12px 40px rgba(15, 23, 42, 0.10);
+    --shadow-neumorphic: 6px 6px 14px rgba(163, 177, 198, 0.25), -6px -6px 14px rgba(255, 255, 255, 0.8);
+    --shadow-neumorphic-inset: inset 3px 3px 6px rgba(163, 177, 198, 0.2), inset -3px -3px 6px rgba(255, 255, 255, 0.7);
+    --shadow-clay: 0 20px 30px -10px rgba(37, 99, 235, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.8), inset 0 -4px 6px rgba(0, 0, 0, 0.05);
+
+    /* Glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-blur: blur(16px) saturate(180%);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Design Token Utility Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-floating-glass);
+}
+
+.neumorphic-card {
+  background: #F7F9FC;
+  box-shadow: var(--shadow-neumorphic);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.neumorphic-inset {
+  background: #F0F4F8;
+  box-shadow: var(--shadow-neumorphic-inset);
+  border-radius: var(--radius-md);
+}
+
+.clay-card {
+  background: linear-gradient(145deg, #ffffff, #eff4ff);
+  box-shadow: var(--shadow-clay);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+/* Accessibility Visible Focus Ring */
+*:focus-visible {
+  outline: 3px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+/* Background Ambient Orbs */
+.bg-ambient-blob-1 {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, rgba(219, 234, 254, 0) 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-ambient-blob-2 {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, rgba(224, 242, 254, 0) 70%);
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keyframes & Motion Animations */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes scanLine {
+  0% { top: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes checkmarkPop {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  70% { transform: scale(1.2) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s infinite ease-in-out;
+}
+
+.animate-scan-line {
+  animation: scanLine 2.5s infinite ease-in-out;
+}
+
+.animate-checkmark {
+  animation: checkmarkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

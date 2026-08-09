@@ -1,234 +1,229 @@
-import { useCallback, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { AppLayout } from "../layouts/AppLayout.jsx";
+import { Heading1, Text } from "../components/ui/Typography.jsx";
+import { Card, StatCard } from "../components/ui/Card.jsx";
+import { Button } from "../components/ui/Button.jsx";
 import { useAuth } from "../features/auth/AuthContext.jsx";
-import { REPORT_CATEGORY_OPTIONS } from "../features/reports/reportCategories.js";
+import { Input, Select, Textarea } from "../components/ui/Input.jsx";
+import { AdminReportTable } from "../components/AdminReportTable.jsx";
+import { listReportsAdmin, updateStatusAdmin, assignDepartmentAdmin, resolveReportAdmin, verifyReportAdmin } from "../services/adminApi.js";
 
-import {
-  assignDepartmentAdmin,
-  listReportsAdmin,
-  resolveReportAdmin,
-  updateStatusAdmin,
-  verifyReportAdmin,
-} from "../services/adminApi.js";
-
-const ADMIN_STATUS_OPTIONS = [
-  ["", "All Statuses"],
-  ["SUBMITTED", "Submitted"],
-  ["AI_ANALYZED", "AI Analyzed"],
-  ["VERIFICATION_PENDING", "Verification Pending"],
-  ["VERIFIED", "Verified"],
-  ["ASSIGNED", "Assigned"],
-  ["IN_PROGRESS", "In Progress"],
-  ["RESOLVED", "Resolved"],
-  ["CITIZEN_CONFIRMATION", "Citizen Confirmation"],
-  ["CLOSED", "Closed"],
-  ["REJECTED", "Rejected"],
-];
-
-function AdminDashboardPage() {
-  const { status: authStatus, user } = useAuth();
+export default function AdminDashboardPage() {
+  const { user } = useAuth();
   const [reports, setReports] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
-  const [filters, setFilters] = useState({ search: "", category: "", status: "" });
-  const [error, setError] = useState("");
-  const [actionError, setActionError] = useState("");
-  const [actionSuccess, setActionSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchReports = useCallback(async () => {
+  if (!user || user.role !== "ADMIN") {
+    return (
+      <AppLayout>
+        <div className="py-20 text-center text-red-600 font-bold text-xl">
+          Access Denied: You do not have administrator permissions.
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Management Form State
+  const [assignedDepartment, setAssignedDepartment] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const [resolutionNotes, setResolutionNotes] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    loadReports();
+  }, [statusFilter, categoryFilter]);
+
+  async function loadReports() {
     setLoading(true);
     try {
-      const res = await listReportsAdmin(filters);
-      setReports(res.reports || []);
-      setPagination(res.pagination || { page: 1, totalPages: 1 });
-      setError("");
+      const data = await listReportsAdmin({
+        status: statusFilter || undefined,
+        category: categoryFilter || undefined,
+        search: searchQuery || undefined,
+      });
+      setReports(data.reports || []);
+      setPagination(data.pagination || null);
     } catch (err) {
-      setError(err.message);
+      console.error("Admin fetch error:", err);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
-
-  useEffect(() => {
-    if (!user || user.role !== "ADMIN") {
-      return undefined;
-    }
-
-    const timer = setTimeout(() => {
-      fetchReports();
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [fetchReports, user]);
-
-  if (authStatus === "loading") {
-    return (
-      <main>
-        <p>Loading account...</p>
-      </main>
-    );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  const handleSelectReport = (report) => {
+    setSelectedReport(report);
+    setAssignedDepartment(report.assignedDepartment || "");
+    setNewStatus(report.status || "");
+    setResolutionNotes("");
+  };
 
-  if (user.role !== "ADMIN") {
-    return (
-      <main>
-        <h1>Access Denied</h1>
-        <p>Administrator privileges are required to view this dashboard.</p>
-      </main>
-    );
-  }
-
-  function handleFilterChange(event) {
-    const { name, value } = event.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  }
-
-  async function handleVerify(reportId) {
-    setActionError("");
-    setActionSuccess("");
+  const handleAssignDepartment = async (e) => {
+    e.preventDefault();
+    if (!selectedReport || !assignedDepartment) return;
+    setIsUpdating(true);
     try {
-      await verifyReportAdmin(reportId);
-      setActionSuccess(`Report ${reportId} verified.`);
-      fetchReports();
+      const updated = await assignDepartmentAdmin(selectedReport._id, assignedDepartment);
+      setSelectedReport(updated.report || updated);
+      loadReports();
     } catch (err) {
-      setActionError(err.message);
+      alert(err.message || "Failed to assign department.");
+    } finally {
+      setIsUpdating(false);
     }
-  }
+  };
 
-  async function handleAssign(reportId) {
-    const dept = window.prompt("Enter department name for assignment:");
-    if (!dept) return;
-    setActionError("");
-    setActionSuccess("");
+  const handleStatusUpdate = async (e) => {
+    e.preventDefault();
+    if (!selectedReport || !newStatus) return;
+    setIsUpdating(true);
     try {
-      await assignDepartmentAdmin(reportId, dept);
-      setActionSuccess(`Report assigned to ${dept}.`);
-      fetchReports();
+      const updated = await updateStatusAdmin(selectedReport._id, newStatus);
+      setSelectedReport(updated.report || updated);
+      loadReports();
     } catch (err) {
-      setActionError(err.message);
+      alert(err.message || "Failed to update status.");
+    } finally {
+      setIsUpdating(false);
     }
-  }
+  };
 
-  async function handleStatusChange(reportId, newStatus) {
-    setActionError("");
-    setActionSuccess("");
+  const handleResolveReport = async (e) => {
+    e.preventDefault();
+    if (!selectedReport) return;
+    setIsUpdating(true);
     try {
-      await updateStatusAdmin(reportId, newStatus);
-      setActionSuccess(`Report status updated to ${newStatus}.`);
-      fetchReports();
+      const updated = await resolveReportAdmin(selectedReport._id, resolutionNotes);
+      setSelectedReport(updated.report || updated);
+      loadReports();
     } catch (err) {
-      setActionError(err.message);
+      alert(err.message || "Failed to resolve report.");
+    } finally {
+      setIsUpdating(false);
     }
-  }
-
-  async function handleResolve(reportId) {
-    const notes = window.prompt("Enter resolution details/notes:");
-    if (notes === null) return;
-    setActionError("");
-    setActionSuccess("");
-    try {
-      await resolveReportAdmin(reportId, notes, null);
-      setActionSuccess(`Report marked resolved.`);
-      fetchReports();
-    } catch (err) {
-      setActionError(err.message);
-    }
-  }
+  };
 
   return (
-    <main>
-      <h1>Admin Dashboard</h1>
-      <section>
-        <h2>Search & Filter Reports</h2>
-        <p>
-          <label htmlFor="admin-search">Search</label>
-          <input
-            id="admin-search"
-            name="search"
-            onChange={handleFilterChange}
+    <AppLayout>
+      <div className="py-8 space-y-6">
+        {/* Restrained Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+          <div>
+            <span className="text-xs font-mono font-bold text-blue-600 uppercase tracking-widest">MUNICIPAL CONTROL CENTER</span>
+            <Heading1 className="text-2xl md:text-3xl">Admin Command Portal</Heading1>
+          </div>
+          <div className="text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+            SYSTEM ROLE: ADMINISTRATOR
+          </div>
+        </div>
+
+        {/* Search & Filter Controls */}
+        <Card variant="flat" className="p-4 flex flex-col md:flex-row gap-4 items-center">
+          <Input
             placeholder="Search by title, description, address..."
-            type="text"
-            value={filters.search}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            containerClassName="w-full md:w-1/3"
           />
-        </p>
-        <p>
-          <label htmlFor="admin-category">Category</label>
-          <select id="admin-category" name="category" onChange={handleFilterChange} value={filters.category}>
-            <option value="">All Categories</option>
-            {REPORT_CATEGORY_OPTIONS.map(([val, label]) => (
-              <option key={val} value={val}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </p>
-        <p>
-          <label htmlFor="admin-status">Status</label>
-          <select id="admin-status" name="status" onChange={handleFilterChange} value={filters.status}>
-            {ADMIN_STATUS_OPTIONS.map(([val, label]) => (
-              <option key={val} value={val}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </p>
-      </section>
+          <Select
+            options={[
+              { value: "", label: "All Statuses" },
+              { value: "SUBMITTED", label: "Submitted" },
+              { value: "AI_ANALYZED", label: "AI Analyzed" },
+              { value: "VERIFIED", label: "Verified" },
+              { value: "ASSIGNED", label: "Assigned" },
+              { value: "IN_PROGRESS", label: "In Progress" },
+              { value: "RESOLVED", label: "Resolved" },
+            ]}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            containerClassName="w-full md:w-1/4"
+          />
+          <Button variant="primary" size="md" onClick={loadReports} className="w-full md:w-auto">
+            Apply Filters
+          </Button>
+        </Card>
 
-      {error ? <p role="alert">{error}</p> : null}
-      {actionError ? <p role="alert">{actionError}</p> : null}
-      {actionSuccess ? <p>{actionSuccess}</p> : null}
-      {loading ? <p>Loading reports...</p> : null}
+        {/* Master / Detail Split View */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            {loading ? (
+              <div className="py-12 text-center text-gray-500 font-mono">Fetching admin records...</div>
+            ) : (
+              <AdminReportTable
+                reports={reports}
+                onSelectReport={handleSelectReport}
+                selectedReportId={selectedReport?._id}
+              />
+            )}
+          </div>
 
-      <section>
-        <h2>Reports Queue ({pagination.total || reports.length})</h2>
-        {reports.length === 0 ? (
-          <p>No reports found matching criteria.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Department</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((report) => (
-                <tr key={report.id}>
-                  <td>{report.title}</td>
-                  <td>{report.category}</td>
-                  <td>{report.priority ?? 0}</td>
-                  <td>{report.status}</td>
-                  <td>{report.assignedDepartment || "Unassigned"}</td>
-                  <td>
-                    <button onClick={() => handleVerify(report.id)} type="button">
-                      Verify
-                    </button>
-                    <button onClick={() => handleAssign(report.id)} type="button">
-                      Assign
-                    </button>
-                    <button onClick={() => handleStatusChange(report.id, "IN_PROGRESS")} type="button">
-                      In Progress
-                    </button>
-                    <button onClick={() => handleResolve(report.id)} type="button">
-                      Resolve
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </main>
+          {/* Report Management Action Panel */}
+          <div>
+            {selectedReport ? (
+              <Card variant="flat" className="p-6 space-y-6 sticky top-24 border-blue-200">
+                <div className="border-b border-gray-200 pb-3">
+                  <span className="text-xs font-mono text-blue-600 font-bold">SELECTED RECORD</span>
+                  <h3 className="font-bold text-gray-900 text-lg line-clamp-1">{selectedReport.title}</h3>
+                  <p className="text-xs text-gray-500 font-mono">{selectedReport._id}</p>
+                </div>
+
+                {/* Assign Department */}
+                <form onSubmit={handleAssignDepartment} className="space-y-3">
+                  <Input
+                    label="Assign Department"
+                    placeholder="e.g. Public Works Department"
+                    value={assignedDepartment}
+                    onChange={(e) => setAssignedDepartment(e.target.value)}
+                  />
+                  <Button type="submit" variant="secondary" size="sm" isLoading={isUpdating} className="w-full">
+                    Assign Department
+                  </Button>
+                </form>
+
+                {/* Update Status */}
+                <form onSubmit={handleStatusUpdate} className="space-y-3 pt-3 border-t border-gray-100">
+                  <Select
+                    label="Update Status"
+                    options={[
+                      { value: "VERIFIED", label: "Verified" },
+                      { value: "ASSIGNED", label: "Assigned" },
+                      { value: "IN_PROGRESS", label: "In Progress" },
+                      { value: "RESOLVED", label: "Resolved" },
+                    ]}
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                  />
+                  <Button type="submit" variant="primary" size="sm" isLoading={isUpdating} className="w-full">
+                    Update Report Status
+                  </Button>
+                </form>
+
+                {/* Mark Resolved */}
+                <form onSubmit={handleResolveReport} className="space-y-3 pt-3 border-t border-gray-100">
+                  <Textarea
+                    label="Resolution Notes"
+                    placeholder="Describe repair actions taken..."
+                    value={resolutionNotes}
+                    onChange={(e) => setResolutionNotes(e.target.value)}
+                  />
+                  <Button type="submit" variant="clay" size="sm" isLoading={isUpdating} className="w-full">
+                    Mark Issue Resolved & Notify Citizen
+                  </Button>
+                </form>
+              </Card>
+            ) : (
+              <Card variant="flat" className="p-8 text-center text-gray-500 text-sm">
+                Select a report from the table to manage department assignments and status progression.
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+    </AppLayout>
   );
 }
-
-export default AdminDashboardPage;

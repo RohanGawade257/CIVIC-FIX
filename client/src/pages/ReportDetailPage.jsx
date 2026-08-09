@@ -1,188 +1,136 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
-import { useAuth } from "../features/auth/AuthContext.jsx";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { AppLayout } from "../layouts/AppLayout.jsx";
+import { Heading1, Text, TextSmall } from "../components/ui/Typography.jsx";
+import { Card } from "../components/ui/Card.jsx";
+import { StatusBadge, CategoryBadge, PriorityBadge } from "../components/ui/StatusBadge.jsx";
+import { CivicMap } from "../components/CivicMap.jsx";
+import { Timeline } from "../components/Timeline.jsx";
+import { BeforeAfterViewer } from "../components/BeforeAfterViewer.jsx";
+import { CitizenConfirmationForm } from "../components/CitizenConfirmationForm.jsx";
 import { getReport } from "../services/reportApi.js";
 import { confirmReportResolution } from "../services/trackingApi.js";
 
-function CitizenConfirmationForm({ reportId, onDone }) {
-  const [confirmed, setConfirmed] = useState(null);
-  const [rating, setRating] = useState(3);
-  const [reviewText, setReviewText] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    if (confirmed === null) {
-      setError("Please indicate whether the issue was resolved.");
-      return;
-    }
-    setSubmitting(true);
-    setError("");
-    try {
-      await confirmReportResolution(reportId, { confirmed, rating, reviewText });
-      onDone();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <section>
-      <h2>Was this issue resolved?</h2>
-      <form onSubmit={handleSubmit}>
-        <p>
-          <button onClick={() => setConfirmed(true)} type="button">
-            Yes, it was fixed
-          </button>
-          <button onClick={() => setConfirmed(false)} type="button">
-            No, still not resolved
-          </button>
-        </p>
-        {confirmed === true ? (
-          <>
-            <p>Current answer: Yes — marking resolved</p>
-            <p>
-              <label htmlFor="satisfaction-rating">Satisfaction rating (1–5)</label>
-              <input
-                id="satisfaction-rating"
-                max="5"
-                min="1"
-                name="rating"
-                onChange={(e) => setRating(Number(e.target.value))}
-                type="number"
-                value={rating}
-              />
-            </p>
-            <p>
-              <label htmlFor="review-text">Optional feedback</label>
-              <textarea
-                id="review-text"
-                name="reviewText"
-                onChange={(e) => setReviewText(e.target.value)}
-                value={reviewText}
-              />
-            </p>
-          </>
-        ) : null}
-        {confirmed === false ? (
-          <p>Current answer: No — report will be reopened for review.</p>
-        ) : null}
-        {error ? <p role="alert">{error}</p> : null}
-        <button disabled={submitting || confirmed === null} type="submit">
-          {submitting ? "Submitting..." : "Submit confirmation"}
-        </button>
-      </form>
-    </section>
-  );
-}
-
-function ReportDetailPage() {
+export default function ReportDetailPage() {
   const { reportId } = useParams();
-  const { status: authStatus, user } = useAuth();
-  const [error, setError] = useState("");
   const [report, setReport] = useState(null);
-  const [status, setStatus] = useState("idle");
-
-  const loadReport = useCallback(async () => {
-    setStatus("loading");
-
-    try {
-      const response = await getReport(reportId);
-      setReport(response.report);
-      setStatus("ready");
-      setError("");
-    } catch (requestError) {
-      setError(requestError.message);
-      setStatus("error");
-    }
-  }, [reportId]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmittingConfirm, setIsSubmittingConfirm] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      return undefined;
+    async function loadReport() {
+      try {
+        const data = await getReport(reportId);
+        setReport(data.report || data);
+      } catch (err) {
+        console.error("Failed to load report detail:", err);
+      } finally {
+        setLoading(false);
+      }
     }
+    loadReport();
+  }, [reportId]);
 
-    const timeoutId = setTimeout(() => {
-      loadReport();
-    }, 0);
+  const handleCitizenConfirmation = async ({ confirmed, rating, feedback }) => {
+    setIsSubmittingConfirm(true);
+    try {
+      const updated = await confirmReportResolution(reportId, { confirmed, rating, feedback });
+      setReport(updated.report || updated);
+    } catch (err) {
+      alert(err.message || "Failed to submit confirmation.");
+    } finally {
+      setIsSubmittingConfirm(false);
+    }
+  };
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [loadReport, user]);
-
-  if (authStatus === "loading") {
+  if (loading) {
     return (
-      <main>
-        <p>Loading account...</p>
-      </main>
+      <AppLayout>
+        <div className="py-20 text-center text-gray-500 font-mono">Loading report details...</div>
+      </AppLayout>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (!report) {
+    return (
+      <AppLayout>
+        <div className="py-20 text-center text-gray-600">
+          <h2 className="text-2xl font-bold">Report Not Found</h2>
+          <p className="mt-2 text-sm">The requested report ID does not exist or has been removed.</p>
+        </div>
+      </AppLayout>
+    );
   }
 
+  const primaryImage = report.images?.[0];
+  const resolutionImage = report.resolutionEvidence?.image;
+
   return (
-    <main>
-      <p>
-        <Link to="/reports/my">Back to my reports</Link>
-      </p>
-      {status === "loading" ? <p>Loading report...</p> : null}
-      {error ? <p role="alert">{error}</p> : null}
-      {report ? (
-        <article>
-          <h1>{report.title}</h1>
-          <p>{report.category}</p>
-          <p>{report.status}</p>
-          <p>{report.description}</p>
-          <p>{report.location?.displayAddress}</p>
-          <p>
-            {report.location?.point?.coordinates?.[1]}, {report.location?.point?.coordinates?.[0]}
-          </p>
-          <p>Priority Score: {report.priority ?? 0}/100</p>
+    <AppLayout>
+      <div className="max-w-4xl mx-auto py-8 space-y-8">
+        {/* Header Metadata */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <CategoryBadge category={report.category} />
+              <StatusBadge status={report.status} />
+              <PriorityBadge priority={report.priority || 0} />
+            </div>
+            <Heading1>{report.title}</Heading1>
+            <TextSmall className="mt-2">
+              Report ID: <span className="font-mono text-gray-800 font-semibold">{report._id}</span> • Reported on {new Date(report.createdAt).toLocaleDateString()}
+            </TextSmall>
+          </div>
+        </div>
 
-          {report.aiAnalysis ? (
-            <section>
-              <h2>AI Advisory Analysis</h2>
-              <p>Severity: {report.aiAnalysis.severity}</p>
-              <p>Confidence: {Math.round((report.aiAnalysis.confidence || 0) * 100)}%</p>
-              <p>Civic Issue Validated: {report.aiAnalysis.isCivicIssue ? "Yes" : "No"}</p>
-              <p>Category Relevance: {report.aiAnalysis.isRelevantToCategory ? "Matches" : "Mismatch"}</p>
-              {report.aiAnalysis.isPotentialDuplicate ? (
-                <p role="alert">Warning: Potential duplicate report detected nearby.</p>
-              ) : null}
-            </section>
-          ) : null}
+        {/* Resolution Evidence Before/After Signature Moment #4 */}
+        {primaryImage && resolutionImage ? (
+          <Card variant="clay" className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Resolution Comparison (Signature Moment)</h3>
+            <BeforeAfterViewer
+              beforeUrl={primaryImage.standardUrl || primaryImage.originalUrl}
+              afterUrl={resolutionImage.standardUrl || resolutionImage.thumbnailUrl}
+            />
+          </Card>
+        ) : primaryImage ? (
+          <div className="rounded-3xl overflow-hidden shadow-lg border border-gray-200">
+            <img
+              src={primaryImage.standardUrl || primaryImage.originalUrl}
+              alt={report.title}
+              className="w-full h-80 object-cover"
+            />
+          </div>
+        ) : null}
 
-          {report.status === "CITIZEN_CONFIRMATION" ? (
-            <CitizenConfirmationForm onDone={loadReport} reportId={report.id} />
-          ) : null}
+        {/* Description & Details */}
+        <Card variant="neumorphic" className="space-y-4">
+          <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Description</h3>
+          <Text className="text-gray-700 whitespace-pre-line">{report.description}</Text>
+        </Card>
 
-          {report.feedback ? (
-            <section>
-              <h2>Your Feedback</h2>
-              <p>Rating: {report.feedback.rating}/5</p>
-              {report.feedback.reviewText ? <p>Review: {report.feedback.reviewText}</p> : null}
-            </section>
-          ) : null}
+        {/* Citizen Confirmation Interaction Signature Moment #5 - Was this issue resolved? */}
+        {report.status === "CITIZEN_CONFIRMATION" && (
+          <CitizenConfirmationForm
+            onSubmit={handleCitizenConfirmation}
+            isLoading={isSubmittingConfirm}
+          />
+        )}
 
-          <h2>Timeline</h2>
-          <ol>
-            {report.timeline.map((entry) => (
-              <li key={`${entry.status}-${entry.createdAt}`}>
-                <p>{entry.status}</p>
-                <p>{entry.message}</p>
-              </li>
-            ))}
-          </ol>
-        </article>
-      ) : null}
-    </main>
+        {/* Incident Location Map */}
+        <Card variant="glass" className="space-y-4">
+          <h3 className="text-lg font-bold text-gray-900">Incident Location</h3>
+          <CivicMap
+            coordinates={report.location?.point?.coordinates}
+            address={report.location?.displayAddress}
+          />
+        </Card>
+
+        {/* Timeline Progress */}
+        <Card variant="neumorphic" className="space-y-4">
+          <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Lifecycle Timeline</h3>
+          <Timeline entries={report.timeline} />
+        </Card>
+      </div>
+    </AppLayout>
   );
 }
-
-export default ReportDetailPage;
