@@ -46,18 +46,32 @@ export default function CreateReportPage() {
   };
 
   const handleGeolocate = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const coords = [pos.coords.longitude, pos.coords.latitude];
-          setCoordinates(coords);
-          setDisplayAddress(`Detected Location (${coords[1].toFixed(4)}°, ${coords[0].toFixed(4)}°)`);
-        },
-        () => {
-          alert("Could not fetch current geolocation. Using default coordinates.");
-        }
-      );
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
     }
+    setDisplayAddress("Detecting your location…");
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { longitude, latitude } = pos.coords;
+        setCoordinates([longitude, latitude]);
+        // Reverse geocode via OpenStreetMap Nominatim
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await res.json();
+          setDisplayAddress(data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+        } catch {
+          setDisplayAddress(`${latitude.toFixed(5)}° N, ${longitude.toFixed(5)}° E`);
+        }
+      },
+      () => {
+        setDisplayAddress("FC Road, Pune, Maharashtra");
+        alert("Could not fetch geolocation. Please pin the location on the map.");
+      },
+      { timeout: 8000 }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -203,7 +217,15 @@ export default function CreateReportPage() {
                 required
               />
 
-              <CivicMap coordinates={coordinates} address={displayAddress} interactive />
+              <CivicMap
+                coordinates={coordinates}
+                address={displayAddress}
+                interactive
+                onLocationSelect={(newLat, newLng, newAddress) => {
+                  setCoordinates([newLng, newLat]);
+                  if (newAddress) setDisplayAddress(newAddress);
+                }}
+              />
             </Card>
 
             {/* Optional Image Editor */}

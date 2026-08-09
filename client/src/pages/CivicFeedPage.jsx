@@ -109,6 +109,7 @@ export default function CivicFeedPage() {
         {/* Live Map */}
         <CivicMap
           coordinates={mapCoords}
+          reports={reports}
           address={
             locationStatus === "granted"
               ? "Showing civic issues near your current location"
