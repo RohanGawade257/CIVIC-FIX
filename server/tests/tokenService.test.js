@@ -7,6 +7,7 @@ const {
   createAuthToken,
   getAuthCookieOptions,
   requireAuthSecret,
+  verifyAuthToken,
 } = require("../src/services/auth/tokenService");
 
 test("createAuthToken signs a short-lived user token", () => {
@@ -17,6 +18,15 @@ test("createAuthToken signs a short-lived user token", () => {
   assert.equal(payload.sub, "user-1");
   assert.equal(payload.role, "USER");
   assert.equal(payload.exp - payload.iat, 7200);
+});
+
+test("verifyAuthToken accepts valid issuer-signed tokens", () => {
+  const secret = "a-secure-test-secret-with-more-than-32-chars";
+  const token = createAuthToken({ id: "user-1", role: "USER" }, secret);
+  const payload = verifyAuthToken(token, secret);
+
+  assert.equal(payload.sub, "user-1");
+  assert.equal(payload.role, "USER");
 });
 
 test("requireAuthSecret rejects missing or placeholder secrets", () => {

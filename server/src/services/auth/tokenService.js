@@ -26,6 +26,12 @@ function createAuthToken(user, secret = env.authSecret) {
   );
 }
 
+function verifyAuthToken(token, secret = env.authSecret) {
+  return jwt.verify(token, requireAuthSecret(secret), {
+    issuer: "civicfix-ai",
+  });
+}
+
 function getAuthCookieOptions(config = env) {
   return {
     httpOnly: true,
@@ -56,4 +62,5 @@ module.exports = {
   getAuthCookieOptions,
   requireAuthSecret,
   setAuthCookie,
+  verifyAuthToken,
 };
