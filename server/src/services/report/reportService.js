@@ -45,7 +45,7 @@ function canViewReport(user, report) {
 
 async function getReportByIdForUser(reportId, user, dependencies = {}) {
   const reportModel = dependencies.reportModel || Report;
-  const report = await reportModel.findById(reportId);
+  const report = await reportModel.findById(reportId).lean();
 
   if (!report) {
     throw new ApiError(404, "Report not found.", "REPORT_NOT_FOUND");
@@ -63,10 +63,10 @@ async function listReportsForUser(userId, dependencies = {}) {
   const query = reportModel.find({ reporterId: userId });
 
   if (query && typeof query.sort === "function") {
-    return (await query.sort({ createdAt: -1 }).limit(50)).map(sanitizeReport);
+    return (await query.sort({ createdAt: -1 }).limit(50).lean()).map(sanitizeReport);
   }
 
-  const reports = await query;
+  const reports = await query.lean();
   return reports.map(sanitizeReport);
 }
 

@@ -2,7 +2,16 @@ const Report = require("../../models/Report");
 const User = require("../../models/User");
 const { REPORT_STATUSES } = require("../../constants/reportStatuses");
 
+const CACHE_TTL_MS = 5 * 60 * 1000;
+let homepageStatsCache = null;
+let homepageStatsCacheTime = 0;
+
 async function getHomepageImpactStats() {
+  const now = Date.now();
+  if (homepageStatsCache && now - homepageStatsCacheTime < CACHE_TTL_MS) {
+    return homepageStatsCache;
+  }
+
   const [reportStats, userStats] = await Promise.all([
     Report.aggregate([
       {
@@ -60,7 +69,7 @@ async function getHomepageImpactStats() {
   const resolutionRate = stats.totalReports > 0 ? (stats.resolvedIssues / stats.totalReports) * 100 : 0;
   const citizenSatisfaction = stats.totalRatings > 0 ? (stats.ratingSum / stats.totalRatings) : 0;
 
-  return {
+  homepageStatsCache = {
     totalReports: stats.totalReports,
     resolvedIssues: stats.resolvedIssues,
     activeIssues: stats.activeIssues,
@@ -68,6 +77,9 @@ async function getHomepageImpactStats() {
     citizenSatisfaction: Math.round(citizenSatisfaction * 10) / 10,
     totalCitizens: userStats,
   };
+  homepageStatsCacheTime = now;
+
+  return homepageStatsCache;
 }
 
 async function getAdminAnalytics() {

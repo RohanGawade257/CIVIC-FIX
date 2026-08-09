@@ -39,7 +39,8 @@ async function listAllReportsAdmin({ search, status, category, minPriority, page
     Report.find(query)
       .sort({ priority: -1, createdAt: -1 })
       .skip(skip)
-      .limit(limitNum),
+      .limit(limitNum)
+      .lean(),
     Report.countDocuments(query),
   ]);
 
@@ -55,7 +56,7 @@ async function listAllReportsAdmin({ search, status, category, minPriority, page
 }
 
 async function getReportDetailAdmin(reportId) {
-  const report = await Report.findById(reportId).populate("reporterId", "name email role");
+  const report = await Report.findById(reportId).populate("reporterId", "name email role").lean();
   if (!report) {
     throw new ApiError(404, "Report not found.", "REPORT_NOT_FOUND");
   }
