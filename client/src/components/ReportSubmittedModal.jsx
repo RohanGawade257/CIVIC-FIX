@@ -6,7 +6,7 @@ export function ReportSubmittedModal({ isOpen, reportId, onDismiss }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-md animate-fadeIn">
       <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-white/80 text-center animate-scaleIn relative overflow-hidden">
         {/* Ambient Top Glow */}
         <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-500" />
