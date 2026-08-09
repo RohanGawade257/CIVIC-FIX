@@ -6,5 +6,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const router = Router();
 
 router.post("/reports", authenticateUser, asyncHandler(reportController.createReportController));
+router.get("/reports/my", authenticateUser, asyncHandler(reportController.listMyReportsController));
+router.get("/reports/:reportId", authenticateUser, asyncHandler(reportController.getReportController));
 
 module.exports = router;

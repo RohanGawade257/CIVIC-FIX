@@ -1,5 +1,7 @@
 const Report = require("../../models/Report");
+const { USER_ROLES } = require("../../constants/userRoles");
 const { REPORT_STATUSES } = require("../../constants/reportStatuses");
+const ApiError = require("../../utils/ApiError");
 const sanitizeReport = require("../../utils/sanitizeReport");
 const { createReportSchema } = require("../../validators/reportValidators");
 
@@ -37,8 +39,42 @@ async function createReport(userId, input, dependencies = {}) {
   return sanitizeReport(report);
 }
 
+function canViewReport(user, report) {
+  return user.role === USER_ROLES.ADMIN || String(report.reporterId) === user.id;
+}
+
+async function getReportByIdForUser(reportId, user, dependencies = {}) {
+  const reportModel = dependencies.reportModel || Report;
+  const report = await reportModel.findById(reportId);
+
+  if (!report) {
+    throw new ApiError(404, "Report not found.", "REPORT_NOT_FOUND");
+  }
+
+  if (!canViewReport(user, report)) {
+    throw new ApiError(403, "You do not have permission to access this report.", "REPORT_FORBIDDEN");
+  }
+
+  return sanitizeReport(report);
+}
+
+async function listReportsForUser(userId, dependencies = {}) {
+  const reportModel = dependencies.reportModel || Report;
+  const query = reportModel.find({ reporterId: userId });
+
+  if (query && typeof query.sort === "function") {
+    return (await query.sort({ createdAt: -1 }).limit(50)).map(sanitizeReport);
+  }
+
+  const reports = await query;
+  return reports.map(sanitizeReport);
+}
+
 module.exports = {
+  canViewReport,
   createInitialTimelineEntry,
   createReport,
+  getReportByIdForUser,
+  listReportsForUser,
   mapIssueLocation,
 };

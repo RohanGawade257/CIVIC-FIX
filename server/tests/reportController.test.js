@@ -4,4 +4,6 @@ const reportController = require("../src/controllers/reportController");
 
 test("reportController exposes createReportController", () => {
   assert.equal(typeof reportController.createReportController, "function");
+  assert.equal(typeof reportController.getReportController, "function");
+  assert.equal(typeof reportController.listMyReportsController, "function");
 });
