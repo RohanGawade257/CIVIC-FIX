@@ -19,6 +19,12 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (password.length < 12) {
+      setError("Password must be at least 12 characters long.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -67,7 +73,7 @@ export default function RegisterPage() {
             <Input
               label="Password"
               type="password"
-              placeholder="Minimum 8 characters"
+              placeholder="Minimum 12 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

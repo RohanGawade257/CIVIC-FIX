@@ -12,10 +12,14 @@ function errorHandler(err, _req, res, next) {
   }
 
   if (err.name === "ZodError") {
+    const issue = err.issues?.[0] || err.errors?.[0];
+    const fieldName = issue?.path?.join(".") || "data";
+    const detailMsg = issue?.message || "Invalid request data.";
     return res.status(400).json({
       success: false,
-      message: "Invalid request data.",
+      message: `${fieldName}: ${detailMsg}`,
       code: "VALIDATION_ERROR",
+      details: err.issues || err.errors,
     });
   }
 
