@@ -1,7 +1,7 @@
 # CivicFix AI - Build Progress
 
-Last updated: 2026-08-09T12:55:00+05:30
-Current phase: Phase 4 - AI Integration
+Last updated: 2026-08-09T13:05:00+05:30
+Current phase: Phase 5 - Admin System
 
 ## Phase 0 - Project Setup
 - [x] Create repository and configure Git
@@ -51,12 +51,12 @@ Current phase: Phase 4 - AI Integration
 - [x] Thumbnail generation
 
 ## Phase 4 - AI Integration
-- [ ] Image classification
-- [ ] Civic relevance validation
-- [ ] Confidence score
-- [ ] Description generation
-- [ ] Severity suggestion
-- [ ] Priority suggestion
+- [x] Image classification
+- [x] Civic relevance validation
+- [x] Confidence score
+- [x] Description generation
+- [x] Severity suggestion
+- [x] Priority suggestion
 
 ## Phase 5 - Admin System
 - [ ] Admin authentication
@@ -134,5 +134,5 @@ Current phase: Phase 4 - AI Integration
 
 ## Decisions Locked In
 - Object storage provider: Cloudinary
-- AI vision provider: Unselected
-- Priority score formula: Unselected
+- AI vision provider: Google Gemini Vision (@google/genai) with MockAiProvider fallback
+- Priority score formula: Severity Weight S (max 40) + Community Confirmation C (max 30) + Recency Boost R (max 20) + Location Context L (max 10)

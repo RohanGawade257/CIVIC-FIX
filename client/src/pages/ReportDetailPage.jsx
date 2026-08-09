@@ -67,6 +67,19 @@ function ReportDetailPage() {
           <p>
             {report.location?.point?.coordinates?.[1]}, {report.location?.point?.coordinates?.[0]}
           </p>
+          <p>Priority Score: {report.priority ?? 0}/100</p>
+          {report.aiAnalysis ? (
+            <section>
+              <h2>AI Advisory Analysis</h2>
+              <p>Severity: {report.aiAnalysis.severity}</p>
+              <p>Confidence: {Math.round((report.aiAnalysis.confidence || 0) * 100)}%</p>
+              <p>Civic Issue Validated: {report.aiAnalysis.isCivicIssue ? "Yes" : "No"}</p>
+              <p>Category Relevance: {report.aiAnalysis.isRelevantToCategory ? "Matches" : "Mismatch"}</p>
+              {report.aiAnalysis.isPotentialDuplicate ? (
+                <p role="alert">Warning: Potential duplicate report detected nearby.</p>
+              ) : null}
+            </section>
+          ) : null}
           <h2>Timeline</h2>
           <ol>
             {report.timeline.map((entry) => (

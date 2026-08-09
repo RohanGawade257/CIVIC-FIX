@@ -60,7 +60,16 @@ async function attachImageToReport(reportId, user, file, dependencies = {}) {
   report.images.push(imageMetadata);
   await report.save();
 
-  return sanitizeReport(report);
+  if (dependencies.autoAnalyze !== false) {
+    const analyzeFn = dependencies.analyzeReportImage || require("../ai/aiService").analyzeReportImage;
+    await analyzeFn(report._id, {
+      imageBuffer: file.buffer,
+      reportModel,
+    });
+  }
+
+  const updatedReport = await reportModel.findById(reportId);
+  return sanitizeReport(updatedReport || report);
 }
 
 module.exports = {

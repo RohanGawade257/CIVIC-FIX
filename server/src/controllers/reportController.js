@@ -41,9 +41,25 @@ async function uploadReportImageController(req, res) {
   });
 }
 
+async function analyzeReportController(req, res) {
+  const { analyzeReportImage } = require("../services/ai/aiService");
+  const { getReportByIdForUser } = require("../services/report/reportService");
+  const sanitizeReport = require("../utils/sanitizeReport");
+
+  // Authorization check (must be report owner or admin)
+  await getReportByIdForUser(req.params.reportId, req.user);
+  const updatedReport = await analyzeReportImage(req.params.reportId);
+
+  res.status(200).json({
+    success: true,
+    report: sanitizeReport(updatedReport),
+  });
+}
+
 module.exports = {
   createReportController,
   getReportController,
   listMyReportsController,
   uploadReportImageController,
+  analyzeReportController,
 };

@@ -15,5 +15,10 @@ router.post(
   uploadImage.single("image"),
   asyncHandler(reportController.uploadReportImageController),
 );
+router.post(
+  "/reports/:reportId/analyze",
+  authenticateUser,
+  asyncHandler(reportController.analyzeReportController),
+);
 
 module.exports = router;
