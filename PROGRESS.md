@@ -1,6 +1,6 @@
 # CivicFix AI - Build Progress
 
-Last updated: 2026-08-09T11:56:20+05:30
+Last updated: 2026-08-09T11:57:08+05:30
 Current phase: Phase 3 - Image System
 
 ## Phase 0 - Project Setup
@@ -130,7 +130,7 @@ Current phase: Phase 3 - Image System
 - [ ] Deployment
 
 ## Blockers / Open Questions
-- None currently.
+- Phase 3 object storage provider must be selected before implementation locks in storage APIs.
 
 ## Decisions Locked In
 - Object storage provider: Unselected
