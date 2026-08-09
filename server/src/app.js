@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const { env } = require("./config/env");
 const authRoutes = require("./routes/authRoutes");
 const healthRoutes = require("./routes/healthRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const userRoutes = require("./routes/userRoutes");
 const { notFoundHandler, errorHandler } = require("./middleware/errorMiddleware");
 
@@ -24,6 +25,7 @@ app.use(cookieParser());
 
 app.use("/api/v1", authRoutes);
 app.use("/api/v1", userRoutes);
+app.use("/api/v1", reportRoutes);
 app.use("/api/v1", healthRoutes);
 
 app.use(notFoundHandler);
